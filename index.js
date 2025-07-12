@@ -1,7 +1,13 @@
-require('dotenv').config();
-const express = require('express');
-const { InteractionType, InteractionResponseType, verifyKeyMiddleware } = require('discord-interactions');
-const fetch = require('node-fetch');
+import dotenv from 'dotenv';
+dotenv.config();
+
+import express from 'express';
+import fetch from 'node-fetch';
+import {
+  InteractionType,
+  InteractionResponseType,
+  verifyKeyMiddleware
+} from 'discord-interactions';
 
 const app = express();
 
@@ -38,6 +44,8 @@ app.post('/interactions', async (req, res) => {
   }
 });
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log('Bot is running!');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Bot is running on port ${PORT}!`);
 });
+
