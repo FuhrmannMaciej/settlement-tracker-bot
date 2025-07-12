@@ -17,14 +17,14 @@ app.use(express.json({
 
 app.post('/interactions', async (req, res) => {
   const interaction = req.body;
-
+  console.log('Interaction received:', interaction);
   if (interaction.type === InteractionType.PING) {
     return res.send({ type: InteractionResponseType.PONG });
   }
 
   if (interaction.type === InteractionType.APPLICATION_COMMAND && interaction.data.name === 'request') {
     try {
-      await fetch(process.env.GOOGLE_WEB_APP_URL, { method: 'POST' });
+      //await fetch(process.env.GOOGLE_WEB_APP_URL, { method: 'POST' });
 
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
