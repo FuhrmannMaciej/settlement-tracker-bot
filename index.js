@@ -38,13 +38,17 @@ app.use(
   }
 );
 
-// ✅ Route to handle Discord interactions
 app.post('/interactions', async (req, res) => {
   const interaction = req.body;
 
   if (!interaction) {
     console.error('⚠️ Empty or invalid request body');
-    return res.status(400).send('Missing body');
+    return res.send({
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+        content: '❌ Received invalid interaction.',
+      },
+    });
   }
 
   if (interaction.type === InteractionType.PING) {
@@ -52,9 +56,10 @@ app.post('/interactions', async (req, res) => {
   }
 
   if (interaction.type === InteractionType.APPLICATION_COMMAND) {
+    console.log('📥 Received command:', JSON.stringify(interaction, null, 2));
     const profession = interaction.data.name;
 
-    // Respond immediately
+    // ✅ Respond to Discord immediately
     res.send({
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
@@ -62,16 +67,30 @@ app.post('/interactions', async (req, res) => {
       },
     });
 
-    // Fire webhook
+    // ✅ Fire webhook asynchronously (Google Apps Script)
     try {
       const webhookUrl = `${process.env.GOOGLE_WEB_APP_URL}?profession=${encodeURIComponent(profession)}`;
-      await fetch(webhookUrl, { method: 'POST' });
+      const webhookRes = await fetch(webhookUrl, { method: 'POST' });
+
+      if (!webhookRes.ok) {
+        console.error(`❌ Webhook failed with status: ${webhookRes.status}`);
+      } else {
+        console.log(`✅ Webhook triggered for ${profession}`);
+      }
     } catch (error) {
-      console.error('❌ Failed to call webhook:', error);
+      console.error('❌ Webhook error:', error);
     }
-  } else {
-    return res.status(400).send('Unknown interaction type');
+
+    return;
   }
+
+  // 🛡️ Fallback: respond to unknown interaction types to avoid timeout
+  return res.send({
+    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+    data: {
+      content: '❓ Unknown interaction type received.',
+    },
+  });
 });
 
 const PORT = process.env.PORT || 3000;
