@@ -6,31 +6,44 @@ import fetch from 'node-fetch';
 import {
   InteractionType,
   InteractionResponseType,
-  verifyKeyMiddleware
+  verifyKeyMiddleware,
 } from 'discord-interactions';
 
 const app = express();
 
-// Parse JSON body first (no verify function here)
-app.use(express.json());
+// ✅ Middleware to parse raw body for verification
+import bodyParser from 'body-parser';
+import { Buffer } from 'buffer';
 
-// Then verify Discord signature on the raw body, BEFORE your routes
-app.use(verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY));
-
-// Optional: Middleware to catch JSON parse errors and log them
-app.use((err, req, res, next) => {
-  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-    console.error('⚠️ Bad JSON received:', err);
-    return res.status(400).send('Invalid JSON');
+// This must go BEFORE express.json and uses a raw parser
+app.use(
+  '/interactions',
+  bodyParser.raw({ type: '*/*' }),
+  (req, res, next) => {
+    try {
+      verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY)(req, res, next);
+    } catch (err) {
+      console.error('🔐 Signature verification failed:', err);
+      return res.status(401).send('Bad request signature');
+    }
+  },
+  (req, res, next) => {
+    try {
+      req.body = JSON.parse(req.body.toString('utf-8'));
+      next();
+    } catch (e) {
+      console.error('❌ Failed to parse JSON body:', e);
+      return res.status(400).send('Invalid JSON');
+    }
   }
-  next(err);
-});
+);
 
+// ✅ Route to handle Discord interactions
 app.post('/interactions', async (req, res) => {
   const interaction = req.body;
 
   if (!interaction) {
-    console.error('⚠️ Missing request body');
+    console.error('⚠️ Empty or invalid request body');
     return res.status(400).send('Missing body');
   }
 
@@ -41,7 +54,7 @@ app.post('/interactions', async (req, res) => {
   if (interaction.type === InteractionType.APPLICATION_COMMAND) {
     const profession = interaction.data.name;
 
-    // Respond immediately to avoid timeout
+    // Respond immediately
     res.send({
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
@@ -49,20 +62,19 @@ app.post('/interactions', async (req, res) => {
       },
     });
 
-    // Trigger your webhook asynchronously
+    // Fire webhook
     try {
       const webhookUrl = `${process.env.GOOGLE_WEB_APP_URL}?profession=${encodeURIComponent(profession)}`;
       await fetch(webhookUrl, { method: 'POST' });
     } catch (error) {
-      console.error('❌ Webhook error:', error);
+      console.error('❌ Failed to call webhook:', error);
     }
   } else {
-    // Unknown interaction type
-    res.status(400).send('Unknown interaction type');
+    return res.status(400).send('Unknown interaction type');
   }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Bot is running on port ${PORT}!`);
+  console.log(`✅ Bot is running on port ${PORT}`);
 });
