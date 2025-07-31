@@ -27,27 +27,19 @@ app.use(
   (req, res, next) => {
     console.log('📩 Incoming request to /interactions');
 
-    try {
-      verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY)(req, res, next);
-    } catch (err) {
-      console.error('🔐 Signature verification failed:', err);
-      return res.status(401).send('Bad request signature');
-    }
-  },
-  (req, res, next) => {
-    try {
-      req.body = JSON.parse(req.body.toString('utf-8'));
-      console.log('✅ Parsed body:', req.body);
+    verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY)(req, res, (err) => {
+      if (err) {
+        console.error('🔐 Signature verification failed:', err);
+        return res.status(401).send('Bad request signature');
+      }
       next();
-    } catch (e) {
-      console.error('❌ Failed to parse JSON body:', e);
-      return res.status(400).send('Invalid JSON');
-    }
+    });
   }
 );
 
 app.post('/interactions', async (req, res) => {
   const interaction = req.body;
+  console.log('✅ Interaction received:', interaction);
 
   if (!interaction) {
     console.error('⚠️ Empty or invalid request body');
