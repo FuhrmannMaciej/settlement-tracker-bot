@@ -15,11 +15,18 @@ const app = express();
 import bodyParser from 'body-parser';
 import { Buffer } from 'buffer';
 
-// This must go BEFORE express.json and uses a raw parser
+app.get('/', (req, res) => {
+  console.log('📥 Ping received at root path /');
+  res.send('Bot is alive');
+});
+
+
 app.use(
   '/interactions',
   bodyParser.raw({ type: '*/*' }),
   (req, res, next) => {
+    console.log('📩 Incoming request to /interactions');
+
     try {
       verifyKeyMiddleware(process.env.DISCORD_PUBLIC_KEY)(req, res, next);
     } catch (err) {
@@ -30,6 +37,7 @@ app.use(
   (req, res, next) => {
     try {
       req.body = JSON.parse(req.body.toString('utf-8'));
+      console.log('✅ Parsed body:', req.body);
       next();
     } catch (e) {
       console.error('❌ Failed to parse JSON body:', e);
