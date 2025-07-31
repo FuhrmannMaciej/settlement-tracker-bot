@@ -17,32 +17,32 @@ app.use(express.json({
 
 app.post('/interactions', async (req, res) => {
   const interaction = req.body;
-  console.log('Interaction received:', interaction);
+
   if (interaction.type === InteractionType.PING) {
     return res.send({ type: InteractionResponseType.PONG });
   }
 
-  if (interaction.type === InteractionType.APPLICATION_COMMAND && interaction.data.name === 'request') {
-    try {
-      //await fetch(process.env.GOOGLE_WEB_APP_URL, { method: 'POST' });
+  if (interaction.type === InteractionType.APPLICATION_COMMAND) {
+    const profession = interaction.data.name;
 
-      return res.send({
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          content: '✅ Request received! The data will appear shortly.',
-        },
-      });
+    // ✅ Immediately respond to Discord to avoid timeout
+    res.send({
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+        content: `⏳ Processing ${profession} info...`,
+      },
+    });
+
+    // ✅ Trigger Google Apps Script webhook asynchronously
+    try {
+      const webhookUrl = `${process.env.GOOGLE_WEB_APP_URL}?profession=${encodeURIComponent(profession)}`;
+      await fetch(webhookUrl, { method: 'POST' });
     } catch (error) {
-      console.error('Error sending to Google Apps Script:', error);
-      return res.send({
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          content: '❌ Failed to trigger Google Apps Script.',
-        },
-      });
+      console.error('❌ Webhook error:', error);
     }
   }
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

@@ -1,23 +1,27 @@
-import fetch from 'node-fetch'; // Even in Node 18+, you need this in CommonJS
+import fetch from 'node-fetch';
 import dotenv from 'dotenv';
+import { commands } from './commands.js';
 dotenv.config();
 
+// Define the Discord API endpoint for guild-level command registration
 const url = `https://discord.com/api/v10/applications/${process.env.DISCORD_APP_ID}/guilds/${process.env.GUILD_ID}/commands`;
 
-const command = {
-  name: 'request',
-  description: 'Get the latest data from Google Sheet',
-  type: 1,
-};
+async function registerCommands() {
+  try {
+    const res = await fetch(url, {
+      method: 'PUT', // Use PUT to overwrite all commands for the guild
+      headers: {
+        'Authorization': `Bot ${process.env.DISCORD_BOT_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(commands),
+    });
 
-const res = await fetch(url, {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bot ${process.env.DISCORD_BOT_TOKEN}`,
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify(command),
-});
+    const data = await res.json();
+    console.log('✅ Slash commands registered:', data);
+  } catch (error) {
+    console.error('❌ Error registering commands:', error);
+  }
+}
 
-const data = await res.json();
-console.log('Slash command registered:', data);
+registerCommands();
