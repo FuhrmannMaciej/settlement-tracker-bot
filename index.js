@@ -39,16 +39,10 @@ app.use(
 
 app.post('/interactions', async (req, res) => {
   const interaction = req.body;
-  console.log('✅ Interaction received:', interaction);
 
   if (!interaction) {
     console.error('⚠️ Empty or invalid request body');
-    return res.send({
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-        content: '❌ Received invalid interaction.',
-      },
-    });
+    return res.status(400).send('Missing body');
   }
 
   if (interaction.type === InteractionType.PING) {
@@ -56,10 +50,9 @@ app.post('/interactions', async (req, res) => {
   }
 
   if (interaction.type === InteractionType.APPLICATION_COMMAND) {
-    console.log('📥 Received command:', JSON.stringify(interaction, null, 2));
     const profession = interaction.data.name;
 
-    // ✅ Respond to Discord immediately
+    // Respond to Discord immediately
     res.send({
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
@@ -67,30 +60,28 @@ app.post('/interactions', async (req, res) => {
       },
     });
 
-    // ✅ Fire webhook asynchronously (Google Apps Script)
+    // Call your webhook in the background
     try {
-      const webhookUrl = `${process.env.GOOGLE_WEB_APP_URL}?profession=${encodeURIComponent(profession)}`;
-      const webhookRes = await fetch(webhookUrl, { method: 'POST' });
+      const response = await fetch(process.env.GOOGLE_WEB_APP_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({ profession }),
+      });
 
-      if (!webhookRes.ok) {
-        console.error(`❌ Webhook failed with status: ${webhookRes.status}`);
-      } else {
-        console.log(`✅ Webhook triggered for ${profession}`);
+      const text = await response.text();
+      console.log('📨 Webhook response:', text);
+
+      if (!response.ok) {
+        console.error(`❌ Webhook failed with status ${response.status}`);
       }
     } catch (error) {
-      console.error('❌ Webhook error:', error);
+      console.error('❌ Error calling webhook:', error);
     }
-
-    return;
+  } else {
+    return res.status(400).send('Unknown interaction type');
   }
-
-  // 🛡️ Fallback: respond to unknown interaction types to avoid timeout
-  return res.send({
-    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-    data: {
-      content: '❓ Unknown interaction type received.',
-    },
-  });
 });
 
 const PORT = process.env.PORT || 3000;
