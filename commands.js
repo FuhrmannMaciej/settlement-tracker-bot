@@ -97,5 +97,29 @@ export const commands = [
         description: 'Get current tailoring data',
       }
     ]
-  }
+  },
+  {
+  name: 'submit',
+  description: 'Submit gathered resource info',
+  options: [
+    {
+      name: 'resource',
+      description: 'Resource name (e.g. Planks)',
+      type: 3, // STRING
+      required: true,
+    },
+    {
+      name: 'tier',
+      description: 'Tier of the resource (e.g. T1, T5)',
+      type: 3, // STRING
+      required: true,
+    },
+    {
+      name: 'quantity',
+      description: 'Quantity gathered',
+      type: 4, // INTEGER
+      required: true,
+    },
+  ],
+}
 ];

@@ -50,39 +50,72 @@ app.post('/interactions', async (req, res) => {
   }
 
   if (interaction.type === InteractionType.APPLICATION_COMMAND) {
-    const profession = interaction.data.name;
+    const commandName = interaction.data.name;
 
-    // Respond to Discord immediately
-    res.send({
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-        content: `⏳ Processing ${profession} info...`,
-      },
-    });
+    if (commandName === 'submit') {
+      const resource = interaction.data.options.find(o => o.name === 'resource')?.value;
+      const tier = interaction.data.options.find(o => o.name === 'tier')?.value;
+      const quantity = interaction.data.options.find(o => o.name === 'quantity')?.value;
+      const user = interaction.member?.user?.username || 'Unknown';
 
-    // Call your webhook in the background
-    try {
-      const response = await fetch(process.env.GOOGLE_WEB_APP_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+      // Respond immediately to Discord
+      res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: `📦 Submitting ${quantity}x ${resource} (${tier})...`,
         },
-        body: new URLSearchParams({ profession }),
       });
 
-      const text = await response.text();
-      console.log('📨 Webhook response:', text);
+      try {
+        const response = await fetch(process.env.GOOGLE_WEB_APP_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            command: '/submit',
+            args: [resource, tier, quantity.toString()],
+            user,
+          }),
+        });
 
-      if (!response.ok) {
-        console.error(`❌ Webhook failed with status ${response.status}`);
+        const result = await response.text();
+        console.log('📨 Webhook response:', result);
+      } catch (err) {
+        console.error('❌ Failed to submit:', err);
       }
-    } catch (error) {
-      console.error('❌ Error calling webhook:', error);
+
+    } else {
+      // Default: profession info
+      const profession = commandName;
+
+      res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: `⏳ Processing ${profession} info...`,
+        },
+      });
+
+      try {
+        const response = await fetch(process.env.GOOGLE_WEB_APP_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({ profession }),
+        });
+
+        const text = await response.text();
+        console.log('📨 Webhook response:', text);
+      } catch (error) {
+        console.error('❌ Error calling webhook:', error);
+      }
     }
   } else {
-    return res.status(400).send('Unknown interaction type');
+    res.status(400).send('Unknown interaction type');
   }
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
