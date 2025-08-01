@@ -99,27 +99,62 @@ export const commands = [
     ]
   },
   {
-  name: 'submit',
-  description: 'Submit gathered resource info',
-  options: [
-    {
-      name: 'resource',
-      description: 'Resource name (e.g. Planks)',
-      type: 3, // STRING
-      required: true,
-    },
-    {
-      name: 'tier',
-      description: 'Tier of the resource (e.g. T1, T5)',
-      type: 3, // STRING
-      required: true,
-    },
-    {
-      name: 'quantity',
-      description: 'Quantity gathered',
-      type: 4, // INTEGER
-      required: true,
-    },
-  ],
-}
+    name: 'submit',
+    description: 'Submit gathered materials',
+    options: [
+      {
+        name: 'resource',
+        description: 'Select a material',
+        type: 3, // STRING
+        required: true,
+        choices: [
+          { name: 'Planks', value: 'Planks' },
+          { name: 'Ingots', value: 'Ingots' },
+          { name: 'Cloth', value: 'Cloth' },
+          { name: 'Bricks', value: 'Bricks' },
+          { name: 'Leather', value: 'Leather' },
+          { name: 'Citric Berries', value: 'Citric Berries' },
+          { name: 'Pebbles', value: 'Pebbles' },
+          { name: 'Vials', value: 'Vials' },
+          { name: 'Water Buckets', value: 'Water Buckets' },
+          { name: 'Resin', value: 'Resin' },
+          { name: 'Crop Oil', value: 'Crop Oil' },
+          { name: 'Pitch', value: 'Pitch' },
+          { name: 'Animal Hair', value: 'Animal Hair' },
+          { name: 'Straw', value: 'Straw' },
+          { name: 'Braxite', value: 'Braxite' },
+          { name: 'Fish Oil', value: 'Fish Oil' },
+          { name: 'Gypsite', value: 'Gypsite' },
+          { name: 'Crushed Shells', value: 'Crushed Shells' },
+          { name: 'Parchment', value: 'Parchment' },
+          { name: 'Carvings', value: 'Carvings' },
+          { name: 'Pigment', value: 'Pigment' }
+        ]
+      },
+      {
+        name: 'tier',
+        description: 'Select a tier',
+        type: 3, // STRING
+        required: true,
+        choices: [
+          { name: 'T1', value: 'T1' },
+          { name: 'T2', value: 'T2' },
+          { name: 'T3', value: 'T3' },
+          { name: 'T4', value: 'T4' },
+          { name: 'T5', value: 'T5' },
+          { name: 'T6', value: 'T6' },
+          { name: 'T7', value: 'T7' },
+          { name: 'T8', value: 'T8' },
+          { name: 'T9', value: 'T9' },
+          { name: 'T10', value: 'T10' }
+        ]
+      },
+      {
+        name: 'quantity',
+        description: 'Amount of materials',
+        type: 4, // INTEGER
+        required: true
+      }
+    ]
+  }
 ];
