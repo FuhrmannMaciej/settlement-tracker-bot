@@ -128,7 +128,8 @@ export const commands = [
           { name: 'Crushed Shells', value: 'Crushed Shells' },
           { name: 'Parchment', value: 'Parchment' },
           { name: 'Carvings', value: 'Carvings' },
-          { name: 'Pigment', value: 'Pigment' }
+          { name: 'Pigment', value: 'Pigment' },
+          { name: 'Flowers', value: 'Flowers'}
         ]
       },
       {
